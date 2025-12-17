@@ -1,0 +1,67 @@
+[project]
+name = "mijiaAPI"
+dynamic = ["version"]
+description = "A Python API for Xiaomi Mijia"
+authors = [{ name = "Do1e", email = "i@do1e.cn" }]
+readme = "README.md"
+requires-python = ">=3.9,<4.0"
+license = { text = "GPL-3.0-or-later" }
+dependencies = [
+    "pillow>=11.3.0",
+    "pycryptodome>=3.23.0",
+    "qrcode>=8.2",
+    "requests>=2.32.5",
+    "tzlocal>=5.3.1",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+]
+
+[project.scripts]
+mijiaAPI = "mijiaAPI.__main__:cli"
+
+[tool.setuptools.packages.find]
+include = ["mijiaAPI"]
+
+[tool.setuptools.dynamic]
+version = {attr = "mijiaAPI.version.version"}
+
+[project.urls]
+Homepage = "https://github.com/Do1e/mijia-api"
+Repository = "https://github.com/Do1e/mijia-api"
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.3.0",
+    "ruff>=0.14.6",
+]
+
+[[tool.uv.index]]
+url = "https://mirror.nju.edu.cn/pypi/web/simple"
+publish-url = "https://upload.pypi.org/legacy/"
+default = true
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+ignore = ["C901", "E501", "E721", "E741", "F402", "F823"]
+select = ["C", "E", "F", "I", "W"]
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+package = true
