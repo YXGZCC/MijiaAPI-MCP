@@ -1,30 +1,43 @@
 {
-  "name": "my-mcp-server",
-  "version": "1.0.0",
-  "description": "A custom MCP server example",
+  "name": "mijia-mcp-server",
+  "version": "2.0.0",
+  "description": "米家智能家居 MCP 服务器 - Mijia Smart Home MCP Server",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/server.js",
   "bin": {
-    "my-mcp-server": "./dist/index.js"
+    "mijia-mcp-server": "./dist/server.js"
   },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "start": "node dist/index.js",
-    "prepare": "npm run build"
+    "start": "node dist/server.js",
+    "prepare": "npm run build",
+    "test": "echo \"Tests not yet configured\" && exit 0"
   },
   "keywords": [
     "mcp",
     "mcp-server",
-    "model-context-protocol"
+    "model-context-protocol",
+    "mijia",
+    "xiaomi",
+    "smart-home",
+    "iot"
   ],
-  "author": "",
+  "author": "MijiaAPI-MCP Contributors",
   "license": "GPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/mijia-mcp-server.git"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.5.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
     "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   }
 }

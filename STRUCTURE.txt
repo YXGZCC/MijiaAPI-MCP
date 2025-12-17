@@ -1,0 +1,84 @@
+项目重构完成！新的标准 MCP 项目结构
+==========================================
+
+核心目录:
+├── .github/workflows/      # CI/CD 工作流
+├── adapter/                # Python 适配器层 (原 python_scripts)
+├── config/                 # 配置文件集中管理
+├── doc/                    # 文档集中管理
+├── mcp_server/             # MCP 服务器代码 (原 src)
+└── utils/                  # 工具脚本
+
+主要变更:
+=========
+
+1. 文件移动:
+   src/index.ts              → mcp_server/server.ts
+   python_scripts/           → adapter/
+   README.md 等文档          → doc/
+   配置文件                  → config/
+
+2. 命名优化:
+   - 服务器名称: my-mcp-server → mijia-mcp-server
+   - 版本号: 1.1.0 → 2.0.0
+   - Python 脚本目录: python_scripts → adapter
+
+3. 新增文件:
+   - __init__.py (包初始化)
+   - pyproject.toml (Python 项目配置)
+   - setup.py (Python 打包)
+   - PUBLISH.md (发布指南)
+   - release.py (发布脚本)
+   - .github/workflows/*.yml (CI/CD)
+   - doc/PROJECT_STRUCTURE.md (架构文档)
+   - utils/test_*.py (测试脚本)
+
+4. 配置更新:
+   - package.json: 更新包名和版本
+   - tsconfig.json: rootDir 改为 mcp_server
+   - .gitignore: 更完善的忽略规则
+   - MCP 客户端配置已更新
+
+快速开始:
+=========
+
+1. 安装依赖:
+   npm install
+   pip install -r config/requirements.txt
+
+2. 构建:
+   npm run build
+
+3. 测试:
+   python utils/test_adapter.py
+   node utils/test_server.mjs
+
+4. 运行:
+   node dist/server.js
+
+注意事项:
+=========
+
+- 旧的 dist/index.js 已删除，现在是 dist/server.js
+- MCP 客户端配置已自动更新为新路径
+- 环境变量 PYTHON_SCRIPT_DIR 现在应指向 adapter/
+- 所有文档已移至 doc/ 目录
+- 配置文件集中在 config/ 目录
+
+测试状态:
+=========
+
+✅ Python 适配器测试通过
+✅ MCP 服务器集成测试通过
+✅ Mock 模式正常工作
+✅ 10 个工具全部可用
+
+下一步:
+=======
+
+1. 阅读 doc/PROJECT_STRUCTURE.md 了解详细架构
+2. 阅读 doc/README.md 查看完整文档
+3. 查看 PUBLISH.md 了解发布流程
+4. 根据需要调整 config/ 中的配置文件
+
+项目现已符合标准 MCP 项目结构规范！

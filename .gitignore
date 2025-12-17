@@ -1,12 +1,49 @@
+# Dependencies
 node_modules/
+.venv/
+venv/
+
+# Build outputs
 dist/
-*.log
-.DS_Store
-.env
 *.tsbuildinfo
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+
+# Python
 __pycache__/
 *.pyc
 *.pyo
-.venv/
-*.zip
+*.pyd
+.Python
+*.egg-info/
+.pytest_cache/
+
+# Mijia auth
 .mijia-api/
+*.json.bak
+
+# Temporary
+tmp/
+temp/
+*.tmp
+*.zip
+
+# Build artifacts
+*.d.ts.map
+*.js.map

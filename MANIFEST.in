@@ -1,0 +1,19 @@
+include README.md
+include LICENSE
+include PUBLISH.md
+include pyproject.toml
+include setup.py
+
+recursive-include config *.txt *.json *.example
+recursive-include doc *.md
+recursive-include adapter *.py
+recursive-include utils *.py
+
+exclude .gitignore
+exclude .env
+exclude *.pyc
+exclude __pycache__
+
+global-exclude *.py[cod]
+global-exclude __pycache__
+global-exclude .DS_Store

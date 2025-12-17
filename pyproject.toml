@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mijia-mcp-server"
+version = "2.0.0"
+description = "米家智能家居 MCP 服务器 - Mijia Smart Home MCP Server"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "GPL-3.0"}
+authors = [
+    {name = "MijiaAPI-MCP Contributors"}
+]
+keywords = ["mijia", "xiaomi", "smart-home", "iot", "mcp", "model-context-protocol"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Home Automation",
+]
+
+dependencies = [
+    "mijiaAPI>=3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+    "black",
+    "ruff",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/mijia-mcp-server"
+Documentation = "https://github.com/yourusername/mijia-mcp-server/blob/main/doc/README.md"
+Repository = "https://github.com/yourusername/mijia-mcp-server.git"
+Issues = "https://github.com/yourusername/mijia-mcp-server/issues"
+
+[tool.setuptools]
+packages = ["adapter", "utils"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311']
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

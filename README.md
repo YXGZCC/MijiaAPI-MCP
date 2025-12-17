@@ -1,4 +1,4 @@
-# My MCP Server · 米家智能控制
+# Mijia MCP Server · 米家智能控制
 
 一个使用 TypeScript + Python 构建的 Model Context Protocol (MCP) 服务器，整合了 [mijiaAPI](https://github.com/Do1e/mijia-api) 提供的米家智能家居能力，支持扫码登录、设备列表、属性读取与设置、场景联动、耗材查询、统计数据等常见操作。
 
@@ -11,7 +11,7 @@
 | `get_device_status` | 查询设备属性，可返回可用属性/动作元数据 |
 | `control_device` | 设置属性或执行动作（如开关、亮度、切换场景） |
 | `list_mijia_scenes` | 查看家庭下的手动场景 |
-| `run_mijia_scene` | 触发指定场景（如“回家”、“晚安”） |
+| `run_mijia_scene` | 触发指定场景（如"回家"、"晚安"） |
 | `list_mijia_consumables` | 查看耗材/配件使用情况（滤芯、电池等） |
 | `get_mijia_statistics` | 获取耗电量等统计数据（小时/天/周/月） |
 | `get_device_spec` | 在线查询设备规格（属性 siid/piid、动作等） |
@@ -22,132 +22,94 @@
 ## 🧱 项目结构
 
 ```
-my-mcp-server/
-├── src/index.ts                  # MCP 主入口（TypeScript）
-├── dist/index.js                 # 构建输出
-├── python_scripts/
-│   ├── mijia_helper.py           # 登录、缓存、API 封装
-│   ├── mijia_tool.py             # action 路由脚本
-│   ├── get_mijia_devices.py      # 兼容旧入口（委托给 mijia_tool ）
-│   ├── get_device_status.py
-│   ├── control_device.py
-│   ├── requirements.txt          # Python 依赖
-│   └── test_environment.py       # 环境检测脚本
-├── README.md / SETUP_GUIDE.md    # 文档
-└── ...
+mijia-mcp-server/
+├── .github/
+│   └── workflows/        # GitHub Actions 工作流
+├── adapter/              # Python 适配器层
+│   ├── __init__.py
+│   ├── mijia_adapter.py  # 米家 API 封装与缓存
+│   └── mijia_tool.py     # 工具路由脚本
+├── config/               # 配置文件
+│   ├── .env.example      # 环境变量示例
+│   ├── mcp-config-example.json
+│   └── requirements.txt  # Python 依赖
+├── doc/                  # 文档目录
+│   ├── README.md         # 完整文档
+│   ├── SETUP_GUIDE.md    # 安装指南
+│   └── TEST_REPORT.md    # 测试报告
+├── mcp_server/           # MCP 服务器主代码
+│   └── server.ts         # TypeScript 主入口
+├── utils/                # 工具函数
+│   └── test_environment.py
+├── dist/                 # 构建输出
+├── __init__.py           # 包初始化
+├── package.json
+├── tsconfig.json
+└── LICENSE
 ```
 
-## 🚀 安装与构建
+## 🚀 快速开始
+
+### 安装依赖
 
 ```bash
-# 安装 Node 依赖
+# 安装 Node.js 依赖
 npm install
 
-# 安装 Python 依赖（建议在虚拟环境中执行）
-pip install -r python_scripts/requirements.txt
+# 安装 Python 依赖
+pip install -r config/requirements.txt
 
 # 构建 TypeScript
 npm run build
 ```
 
-## 🔐 首次扫码登录（必做）
+### 首次扫码登录
 
-1. **准备终端**：确保终端可以正常显示 ANSI 字符（以便展示二维码）。
-2. **执行登录命令**（选择任意一种）：
+```bash
+# 方式一：使用 Python 模块
+python -m mijiaAPI -l
 
-   ```bash
-   # 方式一：使用 Python 模块
-   python -m mijiaAPI -l
+# 方式二：使用 CLI 命令
+mijiaAPI -l
+```
 
-   # 方式二：使用 CLI 命令
-   mijiaAPI -l
-   ```
+终端会打印二维码，用米家 APP 扫描并确认登录。认证信息会自动保存到 `~/.config/mijia-api/auth.json`。
 
-3. 终端会打印 ASCII 二维码，同时输出一个可访问的二维码链接。
-4. 用米家 APP 扫描二维码并确认登录。
-5. 认证信息会自动保存到 `~/.config/mijia-api/auth.json`（可通过 `MIJIA_AUTH_PATH` 修改）。
-6. 之后调用 MCP 工具会自动复用 Token，除非 Token 过期。
+### 配置 MCP 客户端
 
-> **提示**：若希望在项目目录下保存认证信息，可在 `.env` 中设置 `MIJIA_AUTH_PATH=./.mijia-api/auth.json`。
-
-## ⚙️ MCP 配置示例
-
-`c:/Users/chenz/AppData/Local/CodeBuddyExtension/Cache/CodeBuddyIDE/CodeBuddy/mcp/settings.json`
+在 MCP 客户端配置文件中添加：
 
 ```json
 {
   "mcpServers": {
     "mijia-mcp-server": {
       "command": "node",
-      "args": ["c:/Users/chenz/CodeBuddy/20251216173558/dist/index.js"],
+      "args": ["path/to/dist/server.js"],
       "type": "stdio",
       "env": {
-        "PYTHON_PATH": "c:/Users/chenz/CodeBuddy/20251216173558/.venv/Scripts/python.exe",
-        "PYTHON_SCRIPT_DIR": "c:/Users/chenz/CodeBuddy/20251216173558/python_scripts",
-        "MIJIA_AUTH_PATH": "c:/Users/chenz/.config/mijia-api/auth.json"
+        "PYTHON_PATH": "path/to/python",
+        "PYTHON_SCRIPT_DIR": "path/to/adapter",
+        "MIJIA_AUTH_PATH": "~/.config/mijia-api/auth.json"
       }
     }
   }
 }
 ```
 
-## 🛠️ 工具参数参考
+## 📖 详细文档
 
-### `get_mijia_devices`
-- `home_id` (string, 可选)：指定家庭 ID
-- `include_shared` (boolean, default `false`)
-- `use_mock` (boolean, 可选)
+- [完整使用文档](doc/README.md)
+- [安装配置指南](doc/SETUP_GUIDE.md)
+- [测试报告](doc/TEST_REPORT.md)
 
-### `get_device_status`
-- `device_id` 或 `device_name`（至少一个）
-- `properties` (string[])：需要读取的属性列表（如 `on`, `brightness`）
-- `include_metadata` (boolean, default `true`)
-- `sleep_time` (number)：读取间隔（秒）
+## 🧩 Mock 模式
 
-### `control_device`
-- `device_id` 或 `device_name`
-- `operation`：`set_property` / `run_action`
-- `prop_name` + `value`：用于 `set_property`
-- `action_name` + `action_value`：用于 `run_action`
-- `action_kwargs` / `params`：为动作提供额外参数
+通过设置环境变量 `MIJIA_USE_MOCK=1` 或在工具调用时传入 `use_mock: true`，可在没有真实账号/设备时返回模拟数据，便于开发测试。
 
-### `list_mijia_scenes`
-- `home_id` (string, 可选)
+## 🛠️ 开发扩展
 
-### `run_mijia_scene`
-- `scene_id` (string) — 来自 `list_mijia_scenes`
-- `home_id` (string)
-
-### `get_mijia_statistics`
-- `payload`：与 `api.get_statistics` 一致，例如：
-
-```json
-{
-  "payload": {
-    "did": "device_did",
-    "key": "7.1",
-    "data_type": "stat_month_v3",
-    "limit": 6,
-    "time_start": 1700000000,
-    "time_end": 1702592000
-  }
-}
-```
-
-### `get_device_spec`
-- `model` (string)：如 `yeelink.light.lamp4`
-
-> 其余工具参数可在 `src/index.ts` 中查看 JSON Schema。
-
-## 🧩 调试与 Mock 模式
-
-- 通过 `.env` 或 MCP 配置设置 `MIJIA_USE_MOCK=1`，即可在没有真实账号/设备时返回模拟数据。
-- `python python_scripts/test_environment.py "{}"` 可检查 Python 依赖状态。
-
-## 🧱 扩展开发
-
-1. 在 `python_scripts/mijia_tool.py` 中增加新的 `action`
-2. 在 `src/index.ts` 中为该 action 注册一个 MCP 工具
+1. 在 `adapter/mijia_tool.py` 中增加新的 `action`
+2. 在 `mcp_server/server.ts` 中为该 action 注册一个 MCP 工具
 3. 运行 `npm run build`
 
 ## 📝 许可证
@@ -162,3 +124,12 @@ npm run build
 - ⚠️ 您必须公开源代码并声明修改内容
 
 详见 [LICENSE](./LICENSE) 文件。
+
+## 🙏 致谢
+
+- [Do1e/mijia-api](https://github.com/Do1e/mijia-api) - 核心米家 API 库
+- [Model Context Protocol](https://modelcontextprotocol.io) - MCP 协议规范
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！

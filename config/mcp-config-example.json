@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "mijia-mcp-server": {
+      "command": "node",
+      "args": [
+        "/absolute/path/to/mijia-mcp-server/dist/server.js"
+      ],
+      "type": "stdio",
+      "env": {
+        "PYTHON_PATH": "/path/to/python",
+        "PYTHON_SCRIPT_DIR": "/absolute/path/to/mijia-mcp-server/adapter",
+        "MIJIA_AUTH_PATH": "~/.config/mijia-api/auth.json"
+      },
+      "disabled": false
+    }
+  }
+}
