@@ -36,9 +36,12 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 
-# Mijia auth
+# Mijia auth - 防止任何形式的认证文件泄露
 .mijia-api/
 *.json.bak
+auth.json
+**/mijia-api/auth.json
+.config/mijia-api/
 
 # Temporary
 tmp/
