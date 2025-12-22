@@ -16,8 +16,23 @@ const execFileAsync = promisify(execFile);
 const SERVER_NAME = "mijia-mcp-server";
 const SERVER_VERSION = "2.0.0";
 
+// 环境变量配置
 const PYTHON_PATH = process.env.PYTHON_PATH || "python";
 const PYTHON_SCRIPT_DIR = process.env.PYTHON_SCRIPT_DIR || "./adapter";
+const DEBUG_MODE = process.env.DEBUG === "true" || process.env.DEBUG === "1";
+
+// 日志工具
+function log(level: "info" | "warn" | "error", ...args: any[]) {
+  const timestamp = new Date().toISOString();
+  const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
+  console.error(prefix, ...args);
+}
+
+function debugLog(...args: any[]) {
+  if (DEBUG_MODE) {
+    log("info", "[DEBUG]", ...args);
+  }
+}
 
 function resolveScriptPath(scriptName: string): string {
   const baseDir = path.isAbsolute(PYTHON_SCRIPT_DIR)
@@ -29,39 +44,69 @@ function resolveScriptPath(scriptName: string): string {
   return path.join(baseDir, scriptName);
 }
 
+/**
+ * 调用 Python 脚本并返回 JSON 结果
+ * @param scriptName Python 脚本名称
+ * @param args 传递给脚本的参数对象
+ * @returns 脚本执行结果（JSON 对象）
+ */
 async function callPythonScript(
   scriptName: string,
   args: Record<string, unknown> = {}
 ): Promise<any> {
+  const startTime = Date.now();
+  
   try {
     const scriptPath = resolveScriptPath(scriptName);
     const payload = JSON.stringify(args);
+    
+    debugLog(`调用 Python 脚本: ${scriptName}`, { args });
+    
     const { stdout, stderr } = await execFileAsync(PYTHON_PATH, [scriptPath, payload], {
       env: process.env,
+      timeout: 30000, // 30秒超时
     });
 
-    if (stderr) {
-      console.error(`[python:${scriptName}] ${stderr}`);
+    if (stderr && stderr.trim()) {
+      log("warn", `Python 脚本警告 (${scriptName}):`, stderr);
     }
 
     const output = (stdout ?? "").trim();
     if (!output) {
-      throw new Error(`Python 脚本 ${scriptName} 未返回任何 JSON 数据`);
+      throw new Error(`Python 脚本 ${scriptName} 未返回任何数据`);
     }
-    return JSON.parse(output);
+    
+    const result = JSON.parse(output);
+    const elapsed = Date.now() - startTime;
+    debugLog(`Python 脚本执行成功: ${scriptName} (耗时: ${elapsed}ms)`);
+    
+    return result;
 
   } catch (error) {
-    throw new Error(`Python 脚本执行失败 (${scriptName}): ${error}`);
+    const elapsed = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log("error", `Python 脚本执行失败 (${scriptName}, 耗时: ${elapsed}ms):`, errorMessage);
+    throw new Error(`Python 脚本执行失败 (${scriptName}): ${errorMessage}`);
   }
 }
 
+/**
+ * 调用米家 API 操作
+ * @param action 操作类型
+ * @param params 参数
+ * @returns API 执行结果
+ */
 async function callMijiaAction(
   action: string,
   params: Record<string, unknown> = {}
 ): Promise<any> {
+  debugLog(`执行米家操作: ${action}`);
   return callPythonScript("mijia_tool.py", { ...params, action });
 }
 
+/**
+ * 将结果转换为 MCP 文本内容格式
+ */
 function asTextContent(result: unknown) {
   return {
     content: [
@@ -70,6 +115,29 @@ function asTextContent(result: unknown) {
         text: JSON.stringify(result, null, 2),
       },
     ],
+  };
+}
+
+/**
+ * 创建错误响应
+ */
+function createErrorResponse(error: unknown, toolName: string) {
+  const message = error instanceof Error ? error.message : String(error);
+  log("error", `工具执行失败 (${toolName}):`, message);
+  
+  return {
+    content: [
+      {
+        type: "text" as const,
+        text: JSON.stringify({
+          success: false,
+          error: message,
+          tool: toolName,
+          timestamp: new Date().toISOString(),
+        }, null, 2),
+      },
+    ],
+    isError: true,
   };
 }
 
@@ -296,60 +364,120 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const toolName = request.params.name;
   const toolArgs = (request.params.arguments ?? {}) as Record<string, unknown>;
 
+  debugLog(`收到工具调用请求: ${toolName}`, toolArgs);
+
   try {
+    let result: any;
+    
     switch (toolName) {
       case "list_mijia_homes":
-        return asTextContent(await callMijiaAction("list_homes", toolArgs));
+        result = await callMijiaAction("list_homes", toolArgs);
+        break;
       case "get_mijia_devices":
-        return asTextContent(await callMijiaAction("list_devices", toolArgs));
+        result = await callMijiaAction("list_devices", toolArgs);
+        break;
       case "get_device_status":
-        return asTextContent(await callMijiaAction("device_status", toolArgs));
+        result = await callMijiaAction("device_status", toolArgs);
+        break;
       case "control_device":
-        return asTextContent(await callMijiaAction("control_device", toolArgs));
+        result = await callMijiaAction("control_device", toolArgs);
+        break;
       case "list_mijia_scenes":
-        return asTextContent(await callMijiaAction("list_scenes", toolArgs));
+        result = await callMijiaAction("list_scenes", toolArgs);
+        break;
       case "run_mijia_scene":
-        return asTextContent(await callMijiaAction("run_scene", toolArgs));
+        result = await callMijiaAction("run_scene", toolArgs);
+        break;
       case "list_mijia_consumables":
-        return asTextContent(await callMijiaAction("list_consumables", toolArgs));
+        result = await callMijiaAction("list_consumables", toolArgs);
+        break;
       case "get_mijia_statistics":
-        return asTextContent(await callMijiaAction("get_statistics", toolArgs));
+        result = await callMijiaAction("get_statistics", toolArgs);
+        break;
       case "get_device_spec":
-        return asTextContent(await callMijiaAction("get_device_spec", toolArgs));
-      case "get_system_info": {
-        const info = {
-          timestamp: new Date().toISOString(),
-          platform: process.platform,
-          nodeVersion: process.version,
-          architecture: process.arch,
-          uptimeSeconds: process.uptime(),
+        result = await callMijiaAction("get_device_spec", toolArgs);
+        break;
+      case "get_system_info":
+        result = {
+          server: {
+            name: SERVER_NAME,
+            version: SERVER_VERSION,
+          },
+          runtime: {
+            timestamp: new Date().toISOString(),
+            platform: process.platform,
+            nodeVersion: process.version,
+            architecture: process.arch,
+            uptimeSeconds: Math.floor(process.uptime()),
+          },
+          environment: {
+            pythonPath: PYTHON_PATH,
+            scriptDir: PYTHON_SCRIPT_DIR,
+            debugMode: DEBUG_MODE,
+          },
         };
-        return asTextContent(info);
-      }
+        break;
       default:
         throw new Error(`未知的工具: ${toolName}`);
     }
+    
+    debugLog(`工具执行成功: ${toolName}`);
+    return asTextContent(result);
+    
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: `错误: ${message}`,
-        },
-      ],
-      isError: true,
-    };
+    return createErrorResponse(error, toolName);
   }
 });
 
+/**
+ * MCP 服务器主入口函数
+ */
 async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error(`${SERVER_NAME} v${SERVER_VERSION} 已启动`);
+  try {
+    log("info", `正在启动 ${SERVER_NAME} v${SERVER_VERSION}...`);
+    
+    // 验证环境配置
+    debugLog("环境配置:", {
+      PYTHON_PATH,
+      PYTHON_SCRIPT_DIR,
+      DEBUG_MODE,
+    });
+    
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    
+    log("info", `${SERVER_NAME} v${SERVER_VERSION} 已成功启动`);
+    log("info", "等待客户端连接...");
+    
+  } catch (error) {
+    log("error", "服务器启动失败:", error);
+    process.exit(1);
+  }
 }
 
+// 优雅退出处理
+process.on("SIGINT", () => {
+  log("info", "收到 SIGINT 信号，正在关闭服务器...");
+  process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+  log("info", "收到 SIGTERM 信号，正在关闭服务器...");
+  process.exit(0);
+});
+
+// 未捕获异常处理
+process.on("uncaughtException", (error) => {
+  log("error", "未捕获的异常:", error);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  log("error", "未处理的 Promise 拒绝:", reason);
+  process.exit(1);
+});
+
 main().catch((error) => {
-  console.error("服务器启动失败:", error);
+  log("error", "主程序异常:", error);
   process.exit(1);
 });

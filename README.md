@@ -50,20 +50,24 @@ mijia-mcp-server/
 
 ## 🚀 快速开始
 
-### 安装依赖
+### 1. 安装依赖
 
 ```bash
 # 安装 Node.js 依赖
 npm install
 
-# 安装 Python 依赖
+# 安装 Python 依赖（推荐使用虚拟环境）
+python -m venv .venv
+.venv\Scripts\activate  # Windows
+# source .venv/bin/activate  # Linux/Mac
+
 pip install -r config/requirements.txt
 
 # 构建 TypeScript
 npm run build
 ```
 
-### 首次扫码登录
+### 2. 首次扫码登录
 
 ```bash
 # 方式一：使用 Python 模块
@@ -75,20 +79,21 @@ mijiaAPI -l
 
 终端会打印二维码，用米家 APP 扫描并确认登录。认证信息会自动保存到 `~/.config/mijia-api/auth.json`。
 
-### 配置 MCP 客户端
+### 3. 配置 MCP 客户端
 
-在 MCP 客户端配置文件中添加：
+#### Cline (VSCode)
+
+在 VSCode 的 Cline 插件中配置：
 
 ```json
 {
   "mcpServers": {
     "mijia-mcp-server": {
       "command": "node",
-      "args": ["path/to/dist/server.js"],
-      "type": "stdio",
+      "args": ["/absolute/path/to/mijia-mcp-server/dist/server.js"],
       "env": {
-        "PYTHON_PATH": "path/to/python",
-        "PYTHON_SCRIPT_DIR": "path/to/adapter",
+        "PYTHON_PATH": "/path/to/.venv/Scripts/python.exe",
+        "PYTHON_SCRIPT_DIR": "/absolute/path/to/adapter",
         "MIJIA_AUTH_PATH": "~/.config/mijia-api/auth.json"
       }
     }
@@ -96,11 +101,79 @@ mijiaAPI -l
 }
 ```
 
+#### Claude Desktop
+
+编辑 `claude_desktop_config.json`：
+
+```json
+{
+  "mcpServers": {
+    "mijia-mcp-server": {
+      "command": "node",
+      "args": ["/absolute/path/to/dist/server.js"],
+      "env": {
+        "PYTHON_PATH": "/path/to/python",
+        "PYTHON_SCRIPT_DIR": "/absolute/path/to/adapter"
+      }
+    }
+  }
+}
+```
+
+#### Cursor
+
+在设置中添加 MCP 服务器配置（同上）。
+
+### 4. 调试与测试
+
+使用 MCP Inspector 进行可视化调试：
+
+```bash
+# 启动 Inspector
+npm run inspector
+
+# 或使用 mcp dev
+npm install -g mcp
+mcp dev dist/server.js
+```
+
+访问 `http://localhost:5173` 进行调试。
+
+## 🔧 开发指南
+
+### 启用调试日志
+
+```bash
+# Windows
+set DEBUG=true
+node dist/server.js
+
+# Linux/Mac
+DEBUG=true node dist/server.js
+```
+
+### 使用 Mock 模式
+
+在没有真实米家账号时进行开发测试：
+
+```bash
+# 设置环境变量
+export MIJIA_USE_MOCK=1
+
+# 或在工具调用时传入
+{
+  "use_mock": true,
+  "home_id": "test"
+}
+```
+
 ## 📖 详细文档
 
-- [完整使用文档](doc/README.md)
-- [安装配置指南](doc/SETUP_GUIDE.md)
-- [测试报告](doc/TEST_REPORT.md)
+- [📘 完整使用文档](doc/README.md)
+- [⚙️ 安装配置指南](doc/SETUP_GUIDE.md)
+- [🧑‍💻 开发者指南](doc/DEVELOPMENT.md) - **基于 MCP 规范**
+- [✅ 测试报告](doc/TEST_REPORT.md)
+- [📚 MCP 开发规范](test-README.md)
 
 ## 🧩 Mock 模式
 
@@ -108,9 +181,36 @@ mijiaAPI -l
 
 ## 🛠️ 开发扩展
 
-1. 在 `adapter/mijia_tool.py` 中增加新的 `action`
-2. 在 `mcp_server/server.ts` 中为该 action 注册一个 MCP 工具
-3. 运行 `npm run build`
+参考 [开发者指南](doc/DEVELOPMENT.md) 了解详细的开发流程。
+
+简要步骤：
+
+1. 在 `adapter/mijia_adapter.py` 中添加新功能
+2. 在 `adapter/mijia_tool.py` 中增加 action 处理
+3. 在 `mcp_server/server.ts` 中注册 MCP 工具
+4. 运行 `npm run build` 构建
+5. 使用 `npm run inspector` 测试
+
+## 🧪 测试与调试
+
+### 使用 MCP Inspector
+
+```bash
+npm run inspector
+```
+
+### 使用 VSCode 调试
+
+按 `F5` 选择调试配置：
+- **调试 MCP 服务器** - 直接调试
+- **MCP Inspector 调试** - 可视化调试
+
+### Python 单元测试
+
+```bash
+python utils/test_adapter.py
+python utils/test_environment.py
+```
 
 ## 📝 许可证
 

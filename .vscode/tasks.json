@@ -1,0 +1,30 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$tsc"],
+      "label": "npm: build",
+      "detail": "编译 TypeScript 代码"
+    },
+    {
+      "type": "npm",
+      "script": "dev",
+      "isBackground": true,
+      "problemMatcher": ["$tsc-watch"],
+      "label": "npm: dev",
+      "detail": "监听模式编译 TypeScript"
+    },
+    {
+      "type": "npm",
+      "script": "inspector",
+      "label": "npm: inspector",
+      "detail": "使用 MCP Inspector 调试服务器"
+    }
+  ]
+}

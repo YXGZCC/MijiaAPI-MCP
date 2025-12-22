@@ -12,7 +12,9 @@
     "dev": "tsc --watch",
     "start": "node dist/server.js",
     "prepare": "npm run build",
-    "test": "echo \"Tests not yet configured\" && exit 0"
+    "test": "echo \"Tests not yet configured\" && exit 0",
+    "inspector": "npm run build && npx @modelcontextprotocol/inspector node dist/server.js",
+    "inspector:dev": "mcp dev dist/server.js"
   },
   "keywords": [
     "mcp",

@@ -4,12 +4,21 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sys
 from contextlib import redirect_stdout
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO if os.getenv("DEBUG") else logging.WARNING,
+    format="[%(asctime)s] [%(levelname)s] %(message)s",
+    stream=sys.stderr,
+)
+logger = logging.getLogger(__name__)
 
 try:
     from mijiaAPI import (
@@ -134,20 +143,26 @@ class MijiaController:
     # region 初始化
     def _ensure_api(self) -> mijiaAPI:
         if self.use_mock:
+            logger.warning("当前处于 MOCK 模式，无法执行真实 API 调用")
             raise RuntimeError("当前处于 MOCK 模式，无法执行真实 API 调用")
         if not MIJIA_API_AVAILABLE:
+            logger.error("未检测到 mijiaAPI 库")
             raise RuntimeError("未检测到 mijiaAPI，请先执行 pip install -r python_scripts/requirements.txt")
         if self._api is None:
             auth_file = Path(self.auth_path)
             if not auth_file.exists():
+                logger.error(f"未找到米家认证文件: {self.auth_path}")
                 raise RuntimeError(
                     "未找到米家认证文件，请先在终端执行 `python -m mijiaAPI -l` 扫码登录"
                 )
+            logger.info(f"正在使用认证文件: {self.auth_path}")
             api = mijiaAPI(self.auth_path)
             try:
                 with redirect_stdout(sys.stderr):
                     api.login()
+                logger.info("米家 API 登录成功")
             except LoginError as exc:  # type: ignore[arg-type]
+                logger.error(f"米家登录失败: {exc}")
                 raise RuntimeError("米家登录失败，请重新在终端扫码登录：python -m mijiaAPI -l") from exc
             self._api = api
         return self._api

@@ -16,10 +16,12 @@ logs/
 Thumbs.db
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
+
+# 保留 VSCode 调试配置以便开发
+# .vscode/
 
 # Environment
 .env
